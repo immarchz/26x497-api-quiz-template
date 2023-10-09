@@ -15,10 +15,22 @@ export type EnrollmentGetResponse = {
 export const GET = async () => {
   const prisma = getPrisma();
 
-  // 3. display enrollment data (showing student data and course data)
-  // const enrollments = await prisma...
+  try {
+    // Fetch enrollments along with related student and course data
+    const enrollments = await prisma.enrollment.findMany({
+      include: {
+        student: true,
+        course: true,
+      },
+    });
 
-  return NextResponse.json<EnrollmentGetResponse>({
-    enrollments: [], //replace empty array with result from DB
-  });
+    return NextResponse.json<EnrollmentGetResponse>({
+      enrollments, // Return the enrollments array with related student and course data
+    });
+  } catch (error) {
+    console.error(error);
+    return NextResponse.error('Internal server error', 500);
+  }
 };
+
+
