@@ -26,23 +26,35 @@ export type StudentPostResponse =
 
 
 
-export const POST = async (request: NextRequest) => {
-  const {studentId,firstName,lastName}:Partial<Student> = await request.json() ;
-  const prisma = getPrisma();
-
-  //4. Add new Student data
-  const studentPost = await prisma.student.create({
-    data: {
-      studentId,
-      firstName,
-      lastName,
-    }  
-  })
+  export const POST = async (request: NextRequest) => {
+    const { studentId, firstName, lastName }: Partial<Student> = await request.json();
+    const prisma = getPrisma();
   
-  // return NextResponse.json<StudentPostErrorResponse>(
-  //   { ok: false, message: "Student Id already exists" },
-  //   { status: 400 }
-  // );
-
-   return NextResponse.json<StudentPostOKResponse>({ ok: true });
-};
+    try {
+      // Check if a student with the same studentId already exists
+      const existingStudent = await prisma.student.findUnique({
+        where: { studentId },
+      });
+  
+      if (existingStudent) {
+        return NextResponse.json<StudentPostErrorResponse>(
+          { ok: false, message: "Student Id already exists" },
+          { status: 400 }
+        );
+      }
+  
+      // Add new Student data
+      const studentPost = await prisma.student.create({
+        data: {
+          studentId,
+          firstName,
+          lastName,
+        },
+      });
+  
+      return NextResponse.json({message:"Updated!"});
+    } catch (error) {
+      console.error(error);
+      return NextResponse.error('Internal server error', 500);
+    }
+  };
